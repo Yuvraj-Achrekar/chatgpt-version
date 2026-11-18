@@ -728,6 +728,45 @@
             text-align: left
         }
 
+        .payment-screen {
+            min-height: 260px;
+            display: grid;
+            place-items: center;
+            align-content: center;
+            gap: 14px;
+            text-align: center
+        }
+
+        .payment-loader {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            border: 7px solid #f4f1eb;
+            border-top-color: var(--orange);
+            animation: payment-spin .85s linear infinite
+        }
+
+        .payment-check {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            background: #e4f5ed;
+            color: var(--green);
+            display: grid;
+            place-items: center;
+            font-size: 42px;
+            animation: payment-pop .45s cubic-bezier(.2,.9,.3,1.3)
+        }
+
+        @keyframes payment-spin {
+            to { transform: rotate(360deg) }
+        }
+
+        @keyframes payment-pop {
+            from { transform: scale(.45); opacity: 0 }
+            to { transform: scale(1); opacity: 1 }
+        }
+
         .footer {
             text-align: center;
             color: #999;
@@ -837,20 +876,24 @@
         @media(max-width:560px) {
             .topbar {
                 height: 66px;
-                padding: 0 15px
+                padding: 0 12px
             }
 
             .brand {
-                font-size: 19px
+                font-size: 17px;
+                gap: 8px;
+                min-width: 0
             }
 
             .brand-mark {
-                width: 34px;
-                height: 34px
+                width: 32px;
+                height: 32px;
+                flex: 0 0 32px
             }
 
             .top-actions {
-                gap: 5px
+                gap: 4px;
+                justify-content: flex-end
             }
 
             .demo-label {
@@ -858,8 +901,10 @@
             }
 
             .pill {
-                padding: 9px 10px;
-                font-size: 11px
+                min-height: 36px;
+                padding: 8px 9px;
+                font-size: 10px;
+                white-space: nowrap
             }
 
             .main {
@@ -965,15 +1010,32 @@
             .topbar {
                 height: auto;
                 min-height: 66px;
-                flex-wrap: wrap;
                 gap: 8px;
                 padding-top: 10px;
                 padding-bottom: 10px
             }
 
+            .brand {
+                font-size: 15px
+            }
+
+            .brand span {
+                line-height: 1
+            }
+
             .top-actions {
-                width: 100%;
-                justify-content: flex-end
+                min-width: 0
+            }
+
+            #studentTab {
+                padding-left: 8px;
+                padding-right: 8px
+            }
+
+            #staffTab {
+                max-width: 118px;
+                overflow: hidden;
+                text-overflow: ellipsis
             }
 
             .hero {
@@ -1312,7 +1374,25 @@
             let total = items.reduce((a, x) => a + x.qty * x.price, 0);
             let pickup = mobilePickup ? mobilePickup.value : document.getElementById("pickup").value;
             let order = { token: "QL-" + nextNum++, name, cls, pickup, items, total, status: "New", time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), payment: "Demo paid" };
-            orders.unshift(order); persist(); cart = {}; renderCart(); renderMyOrders(); renderStaff(); showTicket(order);
+            showPaymentProcessing(order);
+        }
+        function showPaymentProcessing(order) {
+            let modal = document.getElementById("modal");
+            modal.dataset.mode = "payment";
+            modal.innerHTML = `<div class="payment-screen"><div class="payment-loader"></div><div><div class="eyebrow">Demo payment</div><h2 style="margin:6px 0">Confirming payment...</h2><p>Please wait while we process ${money(order.total)}.</p></div></div>`;
+            document.getElementById("modalWrap").classList.remove("hidden");
+            setTimeout(() => {
+                orders.unshift(order);
+                persist();
+                cart = {};
+                renderCart();
+                renderMyOrders();
+                renderStaff();
+                let paymentModal = document.getElementById("modal");
+                paymentModal.dataset.mode = "payment-success";
+                paymentModal.innerHTML = `<div class="payment-screen"><div class="payment-check">✓</div><div><div class="eyebrow">Payment confirmed</div><h2 style="margin:6px 0">${money(order.total)} confirmed</h2><p>Preparing your pickup ticket...</p></div></div>`;
+                setTimeout(() => showTicket(order), 900);
+            }, 1300);
         }
         function showTicket(o) {
             let modal = document.getElementById("modal");
